@@ -7,17 +7,106 @@
 <link rel="stylesheet" href="./assets/css/app.css" type="text/css" />
 <title>Moto X3M 2 Unblocked</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style>
+  #level-editor {
+    position: absolute;
+    top: 10px; left: 10px;
+    width: 300px; height: 400px;
+    background: #222;
+    color: #fff;
+    padding: 10px;
+    overflow: auto;
+    z-index: 9999;
+    font-family: monospace;
+  }
+  #level-editor textarea {
+    width: 100%;
+    height: 300px;
+    background: #111;
+    color: #fff;
+    border: 1px solid #555;
+    font-family: monospace;
+  }
+</style>
 </head>
 <body>
 <div id="content"></div>
 <div id="orientation"></div>
 <div id="loader">Loading ...</div>
-<script type="text/javascript" src="./assets/box2dweb/nape.min.js">
-        var nape ="./assets/box2dweb/nape.min.js";
-    </script>
-<script type="text/javascript" src="./assets/box2dweb/nape-debug-draw.min.js"></script>
-<script type="text/javascript" src="./assets/box2dweb/jquery-3.1.1.min.js"></script>
-<script type="text/javascript" src="./assets/box2dweb/easeljs-0.8.2.combined.js"></script>
-<script type="text/javascript" src="./assets/box2dweb/bluebird.min.js"></script>
-<script type="text/javascript" src="./motox3m2.min.js?1489d20b164b3a2d04c4"></script></body>
+
+<!-- Level editor -->
+<div id="level-editor">
+  <h3>Level JSON Editor</h3>
+  <input type="file" id="fileInput"><br><br>
+  <textarea id="jsonText"></textarea><br>
+  <button id="loadLevelBtn">Load Level</button>
+</div>
+
+<script src="./assets/box2dweb/nape.min.js"></script>
+<script src="./assets/box2dweb/nape-debug-draw.min.js"></script>
+<script src="./assets/box2dweb/jquery-3.1.1.min.js"></script>
+<script src="./assets/box2dweb/easeljs-0.8.2.combined.js"></script>
+<script src="./assets/box2dweb/bluebird.min.js"></script>
+
+<script>
+let levelData = null;
+
+// Load default JSON first so we can display it
+fetch('./assets/levels/1.json')
+  .then(res => res.text())
+  .then(text => {
+    document.getElementById('jsonText').value = text;
+    levelData = JSON.parse(text);
+  });
+
+// Allow picking a local file
+document.getElementById('fileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    document.getElementById('jsonText').value = ev.target.result;
+    try {
+      levelData = JSON.parse(ev.target.result);
+      alert('Level loaded!');
+    } catch (err) {
+      alert('Invalid JSON file!');
+    }
+  };
+  reader.readAsText(file);
+});
+
+// Load edited JSON into the game
+document.getElementById('loadLevelBtn').addEventListener('click', () => {
+  try {
+    levelData = JSON.parse(document.getElementById('jsonText').value);
+    alert('Level ready to load!');
+    startGameWithLevel(levelData); // Call your game's startup function here
+  } catch (err) {
+    alert('Invalid JSON!');
+  }
+});
+
+// This is where you integrate with your actual game
+function startGameWithLevel(json) {
+  // Example: replace the original game loader's fetch
+  // You might need to modify motox3m2.min.js to accept `json` directly
+  window.gameLevel = json;
+
+  // Hide the editor
+  document.getElementById('level-editor').style.display = 'none';
+  document.getElementById('loader').style.display = 'block';
+
+  // Now call the original game initialization
+  // Example:
+  if (typeof startMotoX3M2 === 'function') {
+    startMotoX3M2(json);
+  } else {
+    console.warn('Call your game start function here with JSON');
+  }
+}
+</script>
+
+<script src="./motox3m2.min.js?1489d20b164b3a2d04c4"></script>
+</body>
 </html>
